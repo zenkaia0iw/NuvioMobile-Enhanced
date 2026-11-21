@@ -1,12 +1,20 @@
 # Fork workflow: NuvioMobile-Enhanced
 
-This fork tracks upstream `NuvioMedia/NuvioMobile` (branch `cmp-rewrite`) and adds features on top.
+## Where this fork comes from
+
+```
+NuvioMedia/NuvioMobile                      (original app, upstream of everything)
+  └─ luqmanfadlli/NuvioMobile-Enhanced      (direct parent: features on top of original)
+       └─ zenkaia0iw/NuvioMobile-Enhanced   (this fork)
+```
+
+This fork syncs from its **direct parent**, `luqmanfadlli/NuvioMobile-Enhanced`, branch `enhanced`. It does not sync from NuvioMedia directly.
 
 ## Remotes
 
 ```bash
-git remote add upstream https://github.com/NuvioMedia/NuvioMobile.git
-git remote -v   # origin = zenkaia0iw/NuvioMobile-Enhanced, upstream = NuvioMedia
+git remote add upstream https://github.com/luqmanfadlli/NuvioMobile-Enhanced.git
+git remote -v   # origin = zenkaia0iw/NuvioMobile-Enhanced, upstream = luqmanfadlli/NuvioMobile-Enhanced
 ```
 
 ## Branches
@@ -32,7 +40,7 @@ Do not commit directly to `enhanced`.
 git fetch upstream
 git checkout enhanced && git pull origin enhanced
 git checkout -b sync/upstream-$(date +%Y%m%d)
-git merge upstream/cmp-rewrite
+git merge upstream/enhanced
 # resolve conflicts, run builds
 git push -u origin HEAD
 ```
@@ -68,11 +76,15 @@ Rule of thumb: upstream wins on shared plumbing, the fork wins on the features i
 
 Features upstream has since adopted are dropped from the README list (the README already says this). Remove them from code only when upstream's version fully covers them.
 
+## Automation that must stay disabled on this fork
+
+`.github/workflows/discontinue-legacy-main.yml` closes every new issue and PR with a "legacy app is being discontinued" comment. It was written for the original project's wind-down and blocks this fork's own work. Disable it under **Actions → Discontinue Legacy Main Intake → Disable workflow**. Re-check it after every sync, since the parent can bring it back.
+
 ## Releases
 
 Release automation lives in `.github/workflows/mobile-release.yml` (and `ios-test-build.yml` for iOS builds).
 
-- Stable: tag `vX.Y.Z-enhanced.N` on `enhanced`, where `X.Y.Z` is the upstream version being tracked and `N` counts fork releases on that base.
+- Stable: tag `vX.Y.Z-enhanced.N` on `enhanced`, where `X.Y.Z` is the version being tracked and `N` counts fork releases on that base.
 - Pre-release (beta): tag `vX.Y.Z-enhanced.N-beta.M` and publish as a pre-release, which feeds `store-beta.json`.
 
 Steps:
