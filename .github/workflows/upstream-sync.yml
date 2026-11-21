@@ -1,7 +1,8 @@
 name: Upstream sync
 
-# Daily: merges NuvioMedia/NuvioMobile cmp-rewrite into `enhanced` on a
-# dated branch and opens a PR. Nothing lands on `enhanced` without review.
+# Daily: merges luqmanfadlli/NuvioMobile-Enhanced `enhanced` (the parent of this fork)
+# into this fork's `enhanced` on a dated branch and opens a PR.
+# Nothing lands on `enhanced` without review.
 
 on:
   schedule:
@@ -29,8 +30,8 @@ jobs:
       - name: Merge upstream into a sync branch
         env:
           GH_TOKEN: ${{ github.token }}
-          UPSTREAM_URL: https://github.com/NuvioMedia/NuvioMobile.git
-          UPSTREAM_BRANCH: cmp-rewrite
+          UPSTREAM_URL: https://github.com/luqmanfadlli/NuvioMobile-Enhanced.git
+          UPSTREAM_BRANCH: enhanced
         run: |
           set -euo pipefail
           git config user.name "fork-sync[bot]"
@@ -58,7 +59,7 @@ jobs:
               --base enhanced \
               --head "$BRANCH" \
               --title "Sync upstream $UPSTREAM_BRANCH ($(date -u +%F))" \
-              --body "Automated merge of NuvioMedia/NuvioMobile \`$UPSTREAM_BRANCH\` into \`enhanced\`. Clean merge: review, build Android and iOS, then merge."
+              --body "Automated merge of luqmanfadlli/NuvioMobile-Enhanced \`$UPSTREAM_BRANCH\` into \`enhanced\`. Clean merge: review, build Android and iOS, then merge."
           else
             git merge --abort
             gh issue create \
