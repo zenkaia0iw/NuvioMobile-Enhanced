@@ -68,7 +68,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.nuvio.media"
+        applicationId = "com.zenkaia.nuvio"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = releaseAppVersionCode
