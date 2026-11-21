@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # One-time local setup for NuvioMobile-Enhanced (zenkaia0iw fork).
+# Syncs from the direct parent: luqmanfadlli/NuvioMobile-Enhanced (branch enhanced).
 # Usage: bash scripts/setup-fork.sh [target-dir]
 set -euo pipefail
 
 ORIGIN="https://github.com/zenkaia0iw/NuvioMobile-Enhanced.git"
-UPSTREAM="https://github.com/NuvioMedia/NuvioMobile.git"
+UPSTREAM="https://github.com/luqmanfadlli/NuvioMobile-Enhanced.git"
 DIR="${1:-NuvioMobile-Enhanced}"
 
 if [ ! -d "$DIR/.git" ]; then
@@ -25,12 +26,12 @@ git submodule update --init --recursive
 
 # Bring in upstream as a sync branch, never straight onto enhanced
 BRANCH="sync/upstream-$(date -u +%Y%m%d)"
-git fetch upstream cmp-rewrite
-if git merge-base --is-ancestor upstream/cmp-rewrite HEAD; then
-  echo "Already up to date with upstream/cmp-rewrite."
+git fetch upstream enhanced
+if git merge-base --is-ancestor upstream/enhanced HEAD; then
+  echo "Already up to date with upstream/enhanced."
 else
   git checkout -b "$BRANCH"
-  if git merge --no-edit upstream/cmp-rewrite; then
+  if git merge --no-edit upstream/enhanced; then
     echo "Clean merge on $BRANCH. Build, then: git push -u origin $BRANCH and open a PR into enhanced."
   else
     echo "Conflicts on $BRANCH. Resolve them per docs/FORK_WORKFLOW.md, then commit."
