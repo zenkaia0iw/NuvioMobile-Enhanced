@@ -3,6 +3,10 @@ name: Upstream sync
 # Daily: merges luqmanfadlli/NuvioMobile-Enhanced `enhanced` (the parent of this fork)
 # into this fork's `enhanced` on a dated branch and opens a PR.
 # Nothing lands on `enhanced` without review.
+#
+# Store metadata files (store.json, store-beta.json) describe this fork's own
+# identity and builds. On conflict in those files only, our side is kept.
+# Any other conflict aborts the sync and opens an issue.
 
 on:
   schedule:
@@ -54,16 +58,35 @@ jobs:
 
           git checkout -b "$BRANCH"
           if git merge --no-edit "upstream/$UPSTREAM_BRANCH"; then
-            git push origin "$BRANCH"
-            gh pr create \
-              --base enhanced \
-              --head "$BRANCH" \
-              --title "Sync upstream $UPSTREAM_BRANCH ($(date -u +%F))" \
-              --body "Automated merge of luqmanfadlli/NuvioMobile-Enhanced \`$UPSTREAM_BRANCH\` into \`enhanced\`. Clean merge: review, build Android and iOS, then merge."
+            KEPT=""
           else
-            git merge --abort
-            gh issue create \
-              --title "Upstream sync conflicts ($(date -u +%F))" \
-              --body "Merging upstream \`$UPSTREAM_BRANCH\` into \`enhanced\` produced conflicts. Resolve locally: see docs/FORK_WORKFLOW.md, section 'Resolving upstream conflicts'."
-            exit 1
+            conflicted="$(git diff --name-only --diff-filter=U)"
+            # Only store metadata may conflict; keep our side for those files.
+            other="$(printf '%s\n' "$conflicted" | grep -Ev '^(store\.json|store-beta\.json)$' || true)"
+            if [ -z "$conflicted" ] || [ -n "$other" ]; then
+              git merge --abort
+              gh issue create \
+                --title "Upstream sync conflicts ($(date -u +%F))" \
+                --body "Merging upstream \`$UPSTREAM_BRANCH\` into \`enhanced\` produced conflicts outside the store metadata files:
+          $other
+          Resolve locally: see docs/FORK_WORKFLOW.md, section 'Resolving upstream conflicts'."
+              exit 1
+            fi
+            git checkout --ours -- $conflicted
+            git add -- $conflicted
+            git commit --no-edit
+            KEPT="$conflicted"
           fi
+
+          git push origin "$BRANCH"
+          body="Automated merge of luqmanfadlli/NuvioMobile-Enhanced \`$UPSTREAM_BRANCH\` into \`enhanced\`. Review, build Android and iOS, then merge."
+          if [ -n "$KEPT" ]; then
+            body="$body
+
+          Store metadata kept from this fork (upstream conflict resolved to our side): $(echo $KEPT)."
+          fi
+          gh pr create \
+            --base enhanced \
+            --head "$BRANCH" \
+            --title "Sync upstream $UPSTREAM_BRANCH ($(date -u +%F))" \
+            --body "$body"
