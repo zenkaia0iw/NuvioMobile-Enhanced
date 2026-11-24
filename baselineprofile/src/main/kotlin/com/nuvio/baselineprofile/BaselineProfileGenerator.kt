@@ -70,7 +70,7 @@ class BaselineProfileGenerator {
         InstrumentationRegistry.getArguments().getString("targetAppId") ?: DEFAULT_PACKAGE_NAME
 
     private companion object {
-        const val DEFAULT_PACKAGE_NAME = "com.nuvio.media"
+        const val DEFAULT_PACKAGE_NAME = "com.mew.mobile"
         const val UI_TIMEOUT_MS = 10_000L
         const val VERTICAL_FLINGS = 3
         const val MAX_ROWS_PER_SCREEN = 2
