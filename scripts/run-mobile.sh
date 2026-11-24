@@ -7,13 +7,13 @@ GRADLEW="$ROOT_DIR/gradlew"
 
 # run-mobile builds debug variants, whose applicationId is overridden in
 # androidApp/build.gradle.kts.
-ANDROID_APP_ID="com.nuviodebug.com"
+ANDROID_APP_ID="com.mew.mobile.debug"
 ANDROID_ACTIVITY=".MainActivity"
 IOS_PROJECT="$ROOT_DIR/iosApp/iosApp.xcodeproj"
 IOS_SCHEME="iosApp"
 IOS_DERIVED_DATA_BASE="$ROOT_DIR/build/ios-derived"
 IOS_APP_NAME="Nuvio.app"
-IOS_BUNDLE_ID="com.nuvio.app.Nuvio"
+IOS_BUNDLE_ID="com.mew.mobile"
 IOS_PREFERRED_DEVICE_MODEL="iPhone 14 Pro"
 
 usage() {
