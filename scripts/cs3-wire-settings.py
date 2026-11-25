@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Wire the CloudStream settings entry into upstream-owned settings files.
 
-Exact-match anchors only. Each anchor must occur the expected number of
-times, otherwise the script stops and changes nothing. Re-running is safe:
-if the CloudStream lines already exist, the script reports and exits.
+Exact-match anchors where the text is known, regex where whitespace may vary.
+Each anchor must occur the expected number of times, otherwise the script
+stops and changes nothing. Re-running is safe: if already wired, it exits.
 """
 import re
 import sys
@@ -29,6 +29,14 @@ def replace_exact(text: str, old: str, new: str, expected: int, label: str) -> s
     if found != expected:
         sys.exit(f"[{label}] anchor found {found} times, expected {expected}. No files changed.")
     return text.replace(old, new)
+
+
+def replace_regex(text: str, pattern: str, template: str, expected: int, label: str) -> str:
+    regex = re.compile(pattern, re.MULTILINE)
+    matches = list(regex.finditer(text))
+    if len(matches) != expected:
+        sys.exit(f"[{label}] pattern matched {len(matches)} times, expected {expected}. No files changed.")
+    return regex.sub(template, text)
 
 
 def already_wired() -> bool:
@@ -62,11 +70,10 @@ def main() -> None:
         expected=1,
         label="models-enum",
     )
-    models = replace_exact(
+    models = replace_regex(
         models,
-        "        SettingsPage.Plugins -> Icons.Default.Power,\n",
-        "        SettingsPage.Plugins -> Icons.Default.Power,\n"
-        "        SettingsPage.CloudStream -> Icons.Default.Extension,\n",
+        r"^( *)SettingsPage\.Plugins -> ([^\n]+)\n",
+        r"\g<0>\g<1>SettingsPage.CloudStream -> Icons.Default.Extension,\n",
         expected=1,
         label="models-icon",
     )
@@ -94,19 +101,17 @@ def main() -> None:
     pieces.append(screen[last:])
     screen = "".join(pieces)
 
-    screen = replace_exact(
+    screen = replace_regex(
         screen,
-        "onMediaServersClick = { onPageChange(SettingsPage.MediaServers) },\n",
-        "onMediaServersClick = { onPageChange(SettingsPage.MediaServers) },\n"
-        "                    onCloudStreamClick = { onPageChange(SettingsPage.CloudStream) },\n",
+        r"^( *)onMediaServersClick = \{ onPageChange\(SettingsPage\.MediaServers\) \},\n",
+        r"\g<0>\g<1>onCloudStreamClick = { onPageChange(SettingsPage.CloudStream) },\n",
         expected=1,
         label="screen-mobile-discovery",
     )
-    screen = replace_exact(
+    screen = replace_regex(
         screen,
-        "onMediaServersClick = { openInlinePage(SettingsPage.MediaServers) },\n",
-        "onMediaServersClick = { openInlinePage(SettingsPage.MediaServers) },\n"
-        "                        onCloudStreamClick = { openInlinePage(SettingsPage.CloudStream) },\n",
+        r"^( *)onMediaServersClick = \{ openInlinePage\(SettingsPage\.MediaServers\) \},\n",
+        r"\g<0>\g<1>onCloudStreamClick = { openInlinePage(SettingsPage.CloudStream) },\n",
         expected=1,
         label="screen-tablet-discovery",
     )
