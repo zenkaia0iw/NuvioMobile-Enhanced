@@ -304,7 +304,7 @@ internal val SettingsPage.icon: ImageVector
         SettingsPage.ContentDiscovery -> Icons.Default.Explore
         SettingsPage.Addons -> Icons.Default.Extension
         SettingsPage.Plugins -> Icons.Default.Power
-        SettingsPage.CloudStream -> Icons.Default.Extension,
+        SettingsPage.CloudStream -> Icons.Default.Extension
         SettingsPage.MediaServers -> Icons.Default.Dns
         SettingsPage.MediaServer -> Icons.Default.Dns
         SettingsPage.Homescreen -> Icons.Default.Dashboard
