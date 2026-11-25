@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cloudstream_settings_title">CloudStream</string>
+    <string name="cloudstream_settings_description">Add CloudStream repositories and manage .cs3 extensions. Android only.</string>
+    <string name="cloudstream_section_disclaimer">Legal and content notice</string>
+    <string name="cloudstream_disclaimer">Third-party extensions and repositories may provide external content. You add them yourself, and you are responsible for making sure your use is lawful. Nuvio does not host, bundle, or endorse any third-party repository or extension.</string>
+    <string name="cloudstream_section_repositories">Repositories</string>
+    <string name="cloudstream_repositories_empty">No repositories added yet. Repository management arrives in the next milestone.</string>
+    <string name="cloudstream_unsupported_title">Not available on this platform</string>
+    <string name="cloudstream_unsupported_description">CloudStream extensions run on Android only.</string>
+    <string name="cloudstream_credit">CloudStream is GPL-3.0 licensed by its authors. Nuvio is GPL-3.0 licensed.</string>
+</resources>
