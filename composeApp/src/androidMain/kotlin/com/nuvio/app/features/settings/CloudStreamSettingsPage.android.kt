@@ -9,6 +9,7 @@ import nuvio.composeapp.generated.resources.cloudstream_disclaimer
 import nuvio.composeapp.generated.resources.cloudstream_repositories_empty
 import nuvio.composeapp.generated.resources.cloudstream_section_disclaimer
 import nuvio.composeapp.generated.resources.cloudstream_section_repositories
+import nuvio.composeapp.generated.resources.cloudstream_settings_title
 import org.jetbrains.compose.resources.stringResource
 
 internal actual fun LazyListScope.cloudStreamSettingsContent(isTablet: Boolean) {
@@ -28,7 +29,7 @@ internal actual fun LazyListScope.cloudStreamSettingsContent(isTablet: Boolean) 
                     onClick = {},
                 )
                 SettingsNavigationRow(
-                    title = stringResource(Res.string.cloudstream_section_disclaimer),
+                    title = stringResource(Res.string.cloudstream_settings_title),
                     description = stringResource(Res.string.cloudstream_credit),
                     isTablet = isTablet,
                     onClick = {},
