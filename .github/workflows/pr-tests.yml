@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 concurrency:
   group: pr-tests-${{ github.ref }}
@@ -35,7 +36,31 @@ jobs:
 
       # Scope: CS3 tests only, so the signal is about this feature's code.
       - name: Run CS3 host tests
-        run: ./gradlew :composeApp:testAndroidHostTest --tests "com.nuvio.app.features.cs3.*" --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew :composeApp:testAndroidHostTest --tests "com.nuvio.app.features.cs3.*" --stacktrace 2>&1 | tee gradle.log
+
+      # On failure, post the actual errors as a PR comment so they can be read
+      # without log access: compile errors (e: ...) and failing test cases.
+      - name: Post failure summary to the PR
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          {
+            echo "### CS3 unit tests failed (commit ${GITHUB_SHA:0:7})"
+            echo
+            echo "Compile errors:"
+            grep -E "^e: " gradle.log | head -30 || true
+            echo
+            echo "Failing tests (from test reports):"
+            grep -h -B2 -A6 "<failure" composeApp/build/test-results/testAndroidHostTest/*.xml 2>/dev/null | head -c 6000 || true
+            echo
+            echo "Gradle tail:"
+            tail -n 40 gradle.log | head -c 4000
+          } > failure-summary.md
+          gh pr comment "$PR_NUMBER" --body-file failure-summary.md
 
       - name: Upload test reports
         if: always()
