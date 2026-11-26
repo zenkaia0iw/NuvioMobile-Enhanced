@@ -3,6 +3,9 @@ name: PR tests
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   workflow_dispatch:
 
 permissions:
@@ -40,3 +43,4 @@ jobs:
           name: test-reports
           path: composeApp/build/reports/tests/
           if-no-files-found: ignore
+          retention-days: 7
