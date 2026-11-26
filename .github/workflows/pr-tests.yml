@@ -1,0 +1,110 @@
+name: PR tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pr-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cs3-unit-tests:
+    name: CS3 unit tests (Android host)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # TEMPORARY quarantine (CI only, not committed to build.gradle.kts).
+      # These upstream test files do not compile on this fork already (verified
+      # in run 45880484313). They block every host test, including CS3's.
+      # Remove this step once the upstream tests are fixed. See docs/CS3.md.
+      - name: Quarantine upstream host tests that do not compile
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("composeApp/build.gradle.kts")
+          text = path.read_text(encoding="utf-8")
+
+          host_anchor = 'val androidHostTest = getByName("androidHostTest") {'
+          common_anchor = "commonTest.dependencies {"
+          assert text.count(host_anchor) == 1, "androidHostTest anchor not found"
+          assert text.count(common_anchor) == 1, "commonTest anchor not found"
+
+          host_excludes = [
+              "**/core/ui/FloatingNavigationBarGestureTest.kt",
+              "**/features/downloads/AndroidDownloadTransferTest.kt",
+              "**/features/home/HomeCatalogSettingsRepositoryTest.kt",
+              "**/features/player/NextEpisodeCardTest.kt",
+              "**/features/player/PlayerGestureOverlayTest.kt",
+              "**/features/player/PlayerSurfaceGesturesTest.kt",
+              "**/features/profiles/ProfileAvatarBorderColorTest.kt",
+              "**/features/settings/NavigationBarGlassSettingsTest.kt",
+          ]
+          common_excludes = ["**/navigation/NavigationSavedStateConfigurationTest.kt"]
+
+          host_line = "\n            kotlin.exclude(" + ", ".join(f'"{p}"' for p in host_excludes) + ")"
+          common_line = "\n        commonTest.kotlin.exclude(" + ", ".join(f'"{p}"' for p in common_excludes) + ")\n        "
+
+          text = text.replace(host_anchor, host_anchor + host_line, 1)
+          text = text.replace(common_anchor, common_line + common_anchor, 1)
+          path.write_text(text, encoding="utf-8")
+          print("Quarantine applied in CI workspace.")
+          PY
+
+      # Scope: CS3 tests only, so the signal is about this feature's code.
+      - name: Run CS3 host tests
+        run: |
+          set -o pipefail
+          ./gradlew :composeApp:testAndroidHostTest --tests "com.nuvio.app.features.cs3.*" --stacktrace 2>&1 | tee gradle.log
+
+      # On failure, post the actual errors as a PR comment so they can be read
+      # without log access: compile errors (e: ...) and failing test cases.
+      - name: Post failure summary to the PR
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          {
+            echo "### CS3 unit tests failed (commit ${GITHUB_SHA:0:7})"
+            echo
+            echo "Compile errors:"
+            grep -E "^e: " gradle.log | head -30 || true
+            echo
+            echo "Failing tests (from test reports):"
+            grep -h -B2 -A6 "<failure" composeApp/build/test-results/testAndroidHostTest/*.xml 2>/dev/null | head -c 6000 || true
+            echo
+            echo "Gradle tail:"
+            tail -n 40 gradle.log | head -c 4000
+          } > failure-summary.md
+          gh pr comment "$PR_NUMBER" --body-file failure-summary.md
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: composeApp/build/reports/tests/
+          if-no-files-found: ignore
+          retention-days: 7

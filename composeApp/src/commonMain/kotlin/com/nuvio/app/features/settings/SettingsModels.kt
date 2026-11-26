@@ -207,6 +207,11 @@ internal enum class SettingsPage(
         category = SettingsCategory.Watch,
         parentPage = ContentDiscovery,
     ),
+    CloudStream(
+        titleRes = Res.string.cloudstream_settings_title,
+        category = SettingsCategory.Watch,
+        parentPage = ContentDiscovery,
+    ),
     MediaServers(
         titleRes = Res.string.compose_settings_page_media_servers,
         category = SettingsCategory.Watch,
@@ -299,6 +304,7 @@ internal val SettingsPage.icon: ImageVector
         SettingsPage.ContentDiscovery -> Icons.Default.Explore
         SettingsPage.Addons -> Icons.Default.Extension
         SettingsPage.Plugins -> Icons.Default.Power
+        SettingsPage.CloudStream -> Icons.Default.Extension
         SettingsPage.MediaServers -> Icons.Default.Dns
         SettingsPage.MediaServer -> Icons.Default.Dns
         SettingsPage.Homescreen -> Icons.Default.Dashboard

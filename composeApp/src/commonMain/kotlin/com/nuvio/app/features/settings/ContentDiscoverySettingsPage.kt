@@ -10,6 +10,8 @@ import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.compose_settings_page_addons
 import nuvio.composeapp.generated.resources.compose_settings_page_media_servers
 import nuvio.composeapp.generated.resources.compose_settings_page_plugins
+import nuvio.composeapp.generated.resources.cloudstream_settings_description
+import nuvio.composeapp.generated.resources.cloudstream_settings_title
 import nuvio.composeapp.generated.resources.settings_content_discovery_addons_description
 import nuvio.composeapp.generated.resources.settings_content_discovery_addons_description_appstore
 import nuvio.composeapp.generated.resources.settings_content_discovery_media_servers_description
@@ -26,6 +28,7 @@ internal fun LazyListScope.contentDiscoveryContent(
     onAddonsClick: () -> Unit,
     onPluginsClick: () -> Unit,
     onMediaServersClick: () -> Unit,
+    onCloudStreamClick: () -> Unit = {},
 ) {
     item {
         val recentSearchesEnabled by remember {
@@ -81,6 +84,12 @@ internal fun LazyListScope.contentDiscoveryContent(
                         onClick = onPluginsClick,
                     )
                 }
+                SettingsNavigationRow(
+                    title = stringResource(Res.string.cloudstream_settings_title),
+                    description = stringResource(Res.string.cloudstream_settings_description),
+                    isTablet = isTablet,
+                    onClick = onCloudStreamClick,
+                )
             }
         }
     }
