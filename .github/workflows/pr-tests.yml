@@ -34,6 +34,44 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      # TEMPORARY quarantine (CI only, not committed to build.gradle.kts).
+      # These upstream test files do not compile on this fork already (verified
+      # in run 45880484313). They block every host test, including CS3's.
+      # Remove this step once the upstream tests are fixed. See docs/CS3.md.
+      - name: Quarantine upstream host tests that do not compile
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("composeApp/build.gradle.kts")
+          text = path.read_text(encoding="utf-8")
+
+          host_anchor = 'val androidHostTest = getByName("androidHostTest") {'
+          common_anchor = "commonTest.dependencies {"
+          assert text.count(host_anchor) == 1, "androidHostTest anchor not found"
+          assert text.count(common_anchor) == 1, "commonTest anchor not found"
+
+          host_excludes = [
+              "**/core/ui/FloatingNavigationBarGestureTest.kt",
+              "**/features/downloads/AndroidDownloadTransferTest.kt",
+              "**/features/home/HomeCatalogSettingsRepositoryTest.kt",
+              "**/features/player/NextEpisodeCardTest.kt",
+              "**/features/player/PlayerGestureOverlayTest.kt",
+              "**/features/player/PlayerSurfaceGesturesTest.kt",
+              "**/features/profiles/ProfileAvatarBorderColorTest.kt",
+              "**/features/settings/NavigationBarGlassSettingsTest.kt",
+          ]
+          common_excludes = ["**/navigation/NavigationSavedStateConfigurationTest.kt"]
+
+          host_line = "\n            kotlin.exclude(" + ", ".join(f'"{p}"' for p in host_excludes) + ")"
+          common_line = "\n        commonTest.kotlin.exclude(" + ", ".join(f'"{p}"' for p in common_excludes) + ")\n        "
+
+          text = text.replace(host_anchor, host_anchor + host_line, 1)
+          text = text.replace(common_anchor, common_line + common_anchor, 1)
+          path.write_text(text, encoding="utf-8")
+          print("Quarantine applied in CI workspace.")
+          PY
+
       # Scope: CS3 tests only, so the signal is about this feature's code.
       - name: Run CS3 host tests
         run: |
