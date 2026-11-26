@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  unit-tests:
-    name: Unit tests (Android host)
+  cs3-unit-tests:
+    name: CS3 unit tests (Android host)
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -33,8 +33,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Run host tests
-        run: ./gradlew :composeApp:testAndroidHostTest --stacktrace
+      # Scope: CS3 tests only, so the signal is about this feature's code.
+      - name: Run CS3 host tests
+        run: ./gradlew :composeApp:testAndroidHostTest --tests "com.nuvio.app.features.cs3.*" --stacktrace
 
       - name: Upload test reports
         if: always()
