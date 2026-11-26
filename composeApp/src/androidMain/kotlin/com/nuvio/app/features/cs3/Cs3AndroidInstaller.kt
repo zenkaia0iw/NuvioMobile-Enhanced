@@ -5,7 +5,9 @@ import com.nuvio.app.core.network.SharedOkHttpClient
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import okhttp3.Request
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.InputStream
 
 // Android CS3 file lifecycle: download, verify SHA-256, atomic write,
 // persistent install index, uninstall. Files live in app-private storage.
@@ -14,6 +16,9 @@ import java.io.File
 // It proves the download matches what the repository listed, not that the
 // repository is trustworthy. Users decide which repositories to trust.
 internal object Cs3AndroidInstaller {
+    // Upper bound for one extension file. Protects memory and storage from oversized downloads.
+    const val MAX_CS3_BYTES: Long = 50L * 1024 * 1024
+
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
@@ -98,7 +103,31 @@ internal object Cs3AndroidInstaller {
         val request = Request.Builder().url(url).build()
         SharedOkHttpClient.base.newCall(request).execute().use { response ->
             check(response.isSuccessful) { "Download failed with status ${response.code}." }
-            return response.body?.bytes() ?: error("Empty download.")
+            val body = response.body ?: error("Empty download.")
+            val declared = body.contentLength()
+            check(declared < 0 || declared <= MAX_CS3_BYTES) {
+                "Extension is larger than the ${MAX_CS3_BYTES / (1024 * 1024)} MB limit."
+            }
+            return body.byteStream().use { readCapped(it) }
         }
     }
+
+    // Reads at most MAX_CS3_BYTES. Covers servers that send no Content-Length.
+    private fun readCapped(input: InputStream): ByteArray {
+        val output = ByteArrayOutputStream()
+        val buffer = ByteArray(DEFAULT_BUFFER)
+        var total = 0L
+        while (true) {
+            val read = input.read(buffer)
+            if (read == -1) break
+            total += read
+            check(total <= MAX_CS3_BYTES) {
+                "Extension is larger than the ${MAX_CS3_BYTES / (1024 * 1024)} MB limit."
+            }
+            output.write(buffer, 0, read)
+        }
+        return output.toByteArray()
+    }
+
+    private const val DEFAULT_BUFFER = 8 * 1024
 }
