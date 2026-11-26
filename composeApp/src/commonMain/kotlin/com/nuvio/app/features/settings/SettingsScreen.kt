@@ -821,7 +821,7 @@ private fun MobileSettingsScreen(
                     onBack = onNavigateBack,
                 )
                 SettingsPage.Plugins -> if (AppFeaturePolicy.pluginsEnabled) pluginsSettingsContent() else addonsSettingsContent()
-                SettingsPage.CloudStream -> cloudStreamSettingsContent(isTablet = False)
+                SettingsPage.CloudStream -> cloudStreamSettingsContent(isTablet = false)
                 SettingsPage.Homescreen -> homescreenSettingsContent(
                     isTablet = false,
                     heroEnabled = homescreenHeroEnabled,
@@ -1282,7 +1282,7 @@ private fun TabletSettingsScreen(
                         onBack = onNavigateBack,
                     )
                     SettingsPage.Plugins -> if (AppFeaturePolicy.pluginsEnabled) pluginsSettingsContent() else addonsSettingsContent()
-                    SettingsPage.CloudStream -> cloudStreamSettingsContent(isTablet = True)
+                    SettingsPage.CloudStream -> cloudStreamSettingsContent(isTablet = true)
                     SettingsPage.Homescreen -> homescreenSettingsContent(
                         isTablet = true,
                         heroEnabled = homescreenHeroEnabled,
