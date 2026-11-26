@@ -2,6 +2,8 @@ package com.nuvio.app.features.settings
 
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import com.nuvio.app.features.cs3.Cs3AndroidInstaller
 import com.nuvio.app.features.cs3.createCs3Runtime
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.cloudstream_credit
@@ -14,6 +16,8 @@ import org.jetbrains.compose.resources.stringResource
 
 internal actual fun LazyListScope.cloudStreamSettingsContent(isTablet: Boolean) {
     item {
+        val context = LocalContext.current
+        remember(context) { Cs3AndroidInstaller.initialize(context.applicationContext) }
         val runtime = remember { createCs3Runtime() }
         val runtimeNote = runtime.unsupportedReason
 
