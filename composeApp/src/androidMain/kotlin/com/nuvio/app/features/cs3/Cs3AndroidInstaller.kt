@@ -19,6 +19,8 @@ internal object Cs3AndroidInstaller {
     // Upper bound for one extension file. Protects memory and storage from oversized downloads.
     const val MAX_CS3_BYTES: Long = 50L * 1024 * 1024
 
+    private const val DEFAULT_BUFFER = 8 * 1024
+
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
@@ -26,10 +28,18 @@ internal object Cs3AndroidInstaller {
     private val listSerializer = ListSerializer(InstalledCs3Plugin.serializer())
     private var root: File? = null
 
+    // Network fetch. Tests replace this to avoid real downloads.
+    internal var downloadFn: (String) -> ByteArray = ::downloadOverNetwork
+
     fun initialize(context: Context) {
         if (root == null) {
             root = File(context.filesDir, "cs3").apply { mkdirs() }
         }
+    }
+
+    // Test-only: point storage at a temporary directory.
+    internal fun initializeForTest(directory: File) {
+        root = directory.apply { mkdirs() }
     }
 
     private fun dir(): File = checkNotNull(root) { "CloudStream storage is not initialized." }
@@ -61,12 +71,15 @@ internal object Cs3AndroidInstaller {
 
     fun listInstalled(): Result<List<InstalledCs3Plugin>> = runCatching { readIndex() }
 
-    // Refuses plugins without a hash: integrity cannot be verified without one.
+    // Refuses non-https URLs and plugins without a hash: integrity cannot be verified without one.
     fun install(entry: Cs3PluginEntry, repoUrl: String): Result<InstalledCs3Plugin> = runCatching {
+        require(entry.url.lowercase().startsWith("https://")) {
+            "Refusing to install ${entry.internalName}: URL must use https."
+        }
         val expectedHash = entry.fileHash?.trim()?.takeIf { it.isNotEmpty() }
             ?: error("Repository gave no hash for ${entry.internalName}. Install refused.")
         val current = readIndex()
-        val bytes = download(entry.url)
+        val bytes = downloadFn(entry.url)
         val actualHash = sha256Hex(bytes)
         check(actualHash.equals(expectedHash, ignoreCase = true)) {
             "Hash mismatch for ${entry.internalName}. Nothing was installed."
@@ -99,7 +112,7 @@ internal object Cs3AndroidInstaller {
         writeIndex(current.filterNot { it.internalName == internalName })
     }
 
-    private fun download(url: String): ByteArray {
+    private fun downloadOverNetwork(url: String): ByteArray {
         val request = Request.Builder().url(url).build()
         SharedOkHttpClient.base.newCall(request).execute().use { response ->
             check(response.isSuccessful) { "Download failed with status ${response.code}." }
@@ -128,6 +141,4 @@ internal object Cs3AndroidInstaller {
         }
         return output.toByteArray()
     }
-
-    private const val DEFAULT_BUFFER = 8 * 1024
 }
